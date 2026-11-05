@@ -1,0 +1,13 @@
+__pycache__/
+.mypy_cache/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Instagram downloads and sessions
+downloads/
+session-*
