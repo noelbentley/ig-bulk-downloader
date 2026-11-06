@@ -136,17 +136,17 @@ Results below are medians of three repetitions on this computer.
 
 | Fixture / pipeline | Enumeration | Media wall time | Total elapsed | HTTP requests | Detail requests | Peak transfers |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Rich / baseline | 0.329 s | 0.779 s | 1.134 s | 60 | 24 | 1 |
-| Rich / optimized, 1 | 0.028 s | 0.756 s | 0.810 s | 36 | 0 | 1 |
-| Rich / optimized, 3 | 0.028 s | 0.292 s | 0.335 s | 36 | 0 | 3 |
-| Rich / optimized, 5 | 0.027 s | 0.207 s | 0.249 s | 36 | 0 | 5 |
-| Sparse / baseline | 0.325 s | 0.776 s | 1.127 s | 60 | 24 | 1 |
-| Sparse / optimized, 1 | 0.326 s | 0.756 s | 1.110 s | 60 | 24 | 1 |
-| Sparse / optimized, 3 | 0.330 s | 0.296 s | 0.643 s | 60 | 24 | 3 |
-| Sparse / optimized, 5 | 0.327 s | 0.209 s | 0.552 s | 60 | 24 | 5 |
+| Rich / baseline | 0.325 s | 0.772 s | 1.121 s | 60 | 24 | 1 |
+| Rich / optimized, 1 | 0.027 s | 0.755 s | 0.809 s | 36 | 0 | 1 |
+| Rich / optimized, 3 | 0.027 s | 0.292 s | 0.334 s | 36 | 0 | 3 |
+| Rich / optimized, 5 | 0.027 s | 0.205 s | 0.244 s | 36 | 0 | 5 |
+| Sparse / baseline | 0.328 s | 0.777 s | 1.129 s | 60 | 24 | 1 |
+| Sparse / optimized, 1 | 0.330 s | 0.754 s | 1.112 s | 60 | 24 | 1 |
+| Sparse / optimized, 3 | 0.324 s | 0.292 s | 0.633 s | 60 | 24 | 3 |
+| Sparse / optimized, 5 | 0.327 s | 0.207 s | 0.553 s | 60 | 24 | 5 |
 
 The rich fixture avoids 24 detail requests: **40% fewer total requests** and about
-**4.56×** lower modeled total time with five workers. The sparse fixture makes the
+**4.59×** lower modeled total time with five workers. The sparse fixture makes the
 same requests as baseline; overlapping transfers reduces modeled total time about
 **2.04×**, leaving discovery unchanged. Exact file sets and SHA-256 bytes matched
 the baseline in every repetition. Native and optimized request probes matched the
@@ -176,7 +176,8 @@ native paths; it was deliberately left unchanged.
 
 Source GUI smoke checks render **16 views** across light/dark themes, including
 the enabled five-worker settings and full diagnostic summary, with networking
-blocked and temporary settings. Frozen smoke checks use the same isolated mode.
+blocked and temporary settings. Frozen smoke checks use the same isolated mode and perform a four-file native/optimized
+comparison with identical bytes, seven versus five requests, and two overlapping workers.
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q

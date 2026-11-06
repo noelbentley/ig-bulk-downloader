@@ -230,7 +230,12 @@ class MediaTransfers:
         lease = None
         try:
             self._check()
-            if task.path.is_file():
+            checked = self.stats.clock() if self.stats else 0
+            exists = task.path.is_file()
+            if self.stats:
+                self.stats.add("duplicate_checks")
+                self.stats.add("duplicate_check_seconds", max(0, self.stats.clock() - checked))
+            if exists:
                 return TransferResult(task, False, started, started)
             with self.lock:
                 lease = self.available.popleft()
