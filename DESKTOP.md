@@ -16,7 +16,7 @@ python -m venv .venv
 
 After installation, the last line is the one-command launch. For a console-free
 source launch use `.\.venv\Scripts\pythonw.exe -m desktop`.
-The optimized development branch builds `dist\optimized-engine\IG-Bulk-Downloader.exe`.
+The current development branch builds `dist\flat-folders\IG-Bulk-Downloader.exe`.
 See [OPTIMIZED_ENGINE.md](OPTIMIZED_ENGINE.md) for its opt-in Instagram pipeline,
 worker controls, offline measurements and limitations. The earlier executables in
 `dist\performance` and `dist\ig-fast-download` remain untouched.
@@ -38,11 +38,22 @@ Its target machine needs no Python installation.
    Retry and restart skip media already present using Instaloader's native checks.
 6. History can be filtered by outcome, retried, or opened in Explorer.
 
-Archives use `destination\@username\posts`, `reels`, `stories` and
-`highlights\ID`. Profile pictures are in `destination\@username\username`.
-No conversion/recompression is performed. Captions can be saved alongside media.
-JSON metadata exports are disabled, including for legacy queues with that option
-enabled. Existing JSON files are left in place. Inter is used if available,
+New downloads use one folder: **`destination\username\media files`**, with no
+`posts`, `reels`, extra username or highlight subfolders. Stories use a stable ID
+suffix to distinguish them from feed files at the same timestamp. Reserved Windows
+device names retain an `@` prefix so they remain valid and cannot collide with
+other usernames.
+
+Existing downloaded archives are not moved, renamed or cleaned up. Queue/history
+records created before the layout change retain their legacy `@username` folder
+and section paths, including on Retry. Newly added jobs use the flat layout and
+save that layout with the queue. Re-adding an old profile as a new job writes into
+the new folder; existing-file checks apply within that job's folder.
+
+No conversion/recompression is performed. Caption `.txt` and JSON metadata exports
+are disabled, including saved options/queue entries that previously enabled them.
+The caption checkbox is removed. Existing text and JSON files are left in place.
+Inter is used if available,
 otherwise Segoe UI/system fallback.
 Theme and accent are configurable.
 
@@ -164,9 +175,8 @@ captions, metadata and failed writes do not count. No engine source is changed.
 There is no dedicated high-level per-file callback in this engine version; this
 documented low-level writer is the narrow boundary used by the desktop adapter.
 
-The file is fully saved before a pacing wait begins. Its timestamp and remaining
-post captions may be finalized after the wait; cancellation can leave those for
-a retry. File counts include saved files even when their containing post is not
+The file is fully saved before a pacing wait begins. Its timestamp may be finalized
+after the wait; cancellation can leave that for a retry. File counts include saved files even when their containing post is not
 yet finished. If the final file hits a threshold, the rest completes before the
 profile is marked completed. Pacing does not interrupt an active transfer.
 
@@ -206,8 +216,8 @@ folders (`@username`), never beside source files. Do not force-add runtime files
   writes on the native path; the optimized path uses unique `.part` files and
   publishes complete media without overwriting an existing target.
 - Incremental runs re-scan selected collections and skip existing media, rather
-  than assume ordering or stop at the first existing post. Captions may be
-  refreshed. Reels/feed overlaps are deduplicated within a run.
+  than assume ordering or stop at the first existing post. Reels/feed overlaps
+  are deduplicated within a run. Existing caption text is not rewritten.
 - Instagram can restrict anonymous access, private profiles, expired sessions and
   APIs. Rate/security/network failures stop the batch and leave pending entries
   queued. Instaloader's normal rate accounting persists per context in the run;
@@ -227,28 +237,29 @@ folders (`@username`), never beside source files. Do not force-add runtime files
 .\.venv\Scripts\python.exe -m pytest tests -q
 .\.venv\Scripts\python.exe -m desktop --smoke-test build\qa-source
 powershell -ExecutionPolicy Bypass -File scripts\build.ps1
-.\dist\optimized-engine\IG-Bulk-Downloader.exe --smoke-test build\qa-optimized-packaged
+.\dist\flat-folders\IG-Bulk-Downloader.exe --smoke-test build\qa-flat-packaged
 ```
 
 To build without replacing the existing executable:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -OutputDirectory dist\optimized-engine
-.\dist\optimized-engine\IG-Bulk-Downloader.exe --smoke-test build\qa-optimized-packaged
+powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -OutputDirectory dist\flat-folders
+.\dist\flat-folders\IG-Bulk-Downloader.exe --smoke-test build\qa-flat-packaged
 ```
 
 The build script refuses to overwrite its target if that executable is running.
-This update is delivered in `dist\optimized-engine\IG-Bulk-Downloader.exe`; the prior
+This update is delivered in `dist\flat-folders\IG-Bulk-Downloader.exe`; the prior
 `dist\IG-Bulk-Downloader.exe`, `dist\pacing\IG-Bulk-Downloader.exe` and
 `dist\public-first\IG-Bulk-Downloader.exe`, `dist\performance\IG-Bulk-Downloader.exe`
-and `dist\ig-fast-download\IG-Bulk-Downloader.exe` are untouched.
+and `dist\ig-fast-download\IG-Bulk-Downloader.exe`, plus the earlier
+`dist\optimized-engine\IG-Bulk-Downloader.exe`, are untouched.
 After your current downloads finish,
 close the old app normally and launch the new executable. Both use the same local
 settings/sessions/history with a single-instance lock. If desired, copy the new
 executable over the old one only after both are closed. Do not stop active jobs
 just to replace a build. The isolated smoke diagnostic does not use your live data.
 
-The branch's build script creates `dist\optimized-engine\IG-Bulk-Downloader.exe` with no console, Qt's Windows
+The branch's build script creates `dist\flat-folders\IG-Bulk-Downloader.exe` with no console, Qt's Windows
 platform plugin and Python bundled. Build from Windows with the lock file for the
 tested environment. This is a repeatable dependency-pinned build, not a claim of
 byte-for-byte deterministic output. Dependency license notices are bundled.

@@ -30,6 +30,7 @@ def run_smoke(output):
         assert window.auth_status.text() == "Public Mode — No Login"
         assert not window.use_session.isChecked()
         assert "metadata" not in window.options
+        assert "captions" not in window.options
         window.show()
 
         def exercise():
@@ -95,12 +96,15 @@ def run_smoke(output):
                     api_latency=0, media_latency=0.005)
                 optimized, optimized_files = run_case(Path(temporary) / "optimized", True, 2, True, 2, 0, 0.005)
                 assert native_files == optimized_files and optimized["files"] == 4
+                assert all(len(Path(name).parts) == 2 and Path(name).parts[0] == "fixture" for name in optimized_files)
+                assert not list((Path(temporary) / "optimized").rglob("*.txt"))
                 assert native["http_requests"] == 7 and optimized["http_requests"] == 5
                 assert optimized["peak_transfers"] == 2
                 result = {"ok": True, "profiles": 2, "views": 16, "network": "disabled", "mode": "public",
                           "frozen": bool(getattr(sys, "frozen", False)),
                           "engine_check": {"files": 4, "identical_bytes": True, "native_requests": 7,
-                                           "optimized_requests": 5, "peak_workers": 2}}
+                                           "optimized_requests": 5, "peak_workers": 2,
+                                           "flat_profile_folder": True, "caption_files": 0}}
                 (output / "result.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
             except Exception:
                 failures.append(traceback.format_exc())

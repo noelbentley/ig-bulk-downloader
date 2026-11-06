@@ -7,14 +7,17 @@ Instagram implementation; no WFDownloader code or endpoint implementation was co
 
 ## Selecting a pipeline
 
-Launch `dist\optimized-engine\IG-Bulk-Downloader.exe`, after closing any other
+Launch `dist\flat-folders\IG-Bulk-Downloader.exe`, after closing any other
 IG Bulk Downloader instance normally. Settings → **Optimized Public Downloads —
 Experimental** enables the public-feed pipeline and selects **1–5** media workers.
 The optimization is **off by default**; its enabled default worker selection is
 three. Disabling it retains the working Instaloader path.
 
-Public feed photos/videos, including individual carousel children, are eligible
-when captions are off. Public-first consent remains in place. Captions, profile
+Public feed photos/videos, including individual carousel children, are eligible.
+Caption text and JSON exports are now always disabled, including legacy saved
+settings. New jobs write directly into `destination\username`; existing jobs retain
+their old folder layout, and existing media/text files are not moved or deleted.
+Public-first consent remains in place. Profile
 pictures, Reels, Stories, Highlights, authenticated/private operations and custom
 native filename/slide options retain Instaloader. A mixed queue may use both paths,
 section by section, without losing its totals. No unrelated download-site support
@@ -96,7 +99,8 @@ public section can have 1–5 concurrent media files. Native fallback remains se
   appeared while downloading. Failed/cancelled partials are removed. An OS/process
   crash can leave an uncounted orphan `.part`; retry creates a new partial and skips
   complete existing media. It does not automatically delete unrelated files.
-- Timestamp/carousel filenames match the default Instaloader layout. Duplicate
+- Timestamp/carousel filenames match the default Instaloader naming. New jobs use
+  one username folder; older saved jobs retain their section folders. Duplicate
   detection uses existing paths, matching baseline semantics; this is not a content
   hash deduplicator for renamed files elsewhere.
 - Supplemental pacing still counts successful JPG/MP4 files and spans queue profiles.
@@ -162,11 +166,13 @@ run during this development and no new speed claim is made from these timings.
 The compact numeric summary is in
 [`research/optimized-engine-benchmarks.json`](research/optimized-engine-benchmarks.json).
 Full local samples are ignored under `build`.
+These measurements predate the flat-folder/text-export update; they are historical
+synthetic engine measurements, not a performance measurement of the layout change.
 
 ## Validation and packaging
 
-The full suite passed **182 tests**, retaining the original 130 tests and adding
-52 optimized-path cases. Checks cover actual worker overlap, session isolation,
+The current full suite passed **194 tests**, including optimized-path cases and
+flat-folder/legacy-path/text-export regression checks. Checks cover actual worker overlap, session isolation,
 serialized API discovery, byte/path equivalence, pagination, media selection,
 duplicate/collision behavior, partial bodies, local disk errors, restrictions,
 pause/resume, cancellation, pacing thresholds and continuity, explicit private
@@ -182,17 +188,18 @@ comparison with identical bytes, seven versus five requests, and two overlapping
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\python.exe -m desktop --smoke-test build\qa-optimized-source
-.\scripts\build.ps1 -OutputDirectory dist\optimized-engine
-.\dist\optimized-engine\IG-Bulk-Downloader.exe --smoke-test build\qa-optimized-packaged
+.\scripts\build.ps1 -OutputDirectory dist\flat-folders
+.\dist\flat-folders\IG-Bulk-Downloader.exe --smoke-test build\qa-flat-packaged
 ```
 
-The original executables in `dist`, `dist\performance` and `dist\ig-fast-download`
+The original executables in `dist`, `dist\performance`, `dist\ig-fast-download`
+and `dist\optimized-engine`
 are not replaced. Build checks refuse to overwrite an executable that is in use.
 Close an existing application normally before launching the experimental build;
 the ordinary application lock prevents two active copies sharing queue/history.
 
 For a later controlled live comparison, use fresh destinations, identical public
-profile/content/quality, captions off, Balanced pacing and one client at a time.
+profile/content/quality, Balanced pacing and one client at a time.
 Run baseline and optimized with one worker first; then compare a chosen higher
 worker count during ordinary authorized use. Record discovery, transfer and total
 elapsed time, bytes/count/dimensions, requests and every wait category. Stop on

@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
         destination.addWidget(self.destination)
         destination.addWidget(button("Browse…", self.choose_destination))
         layout.addLayout(destination)
-        hint = QLabel("Each queued profile keeps its own folder and options. Change media selection in Download Options.")
+        hint = QLabel("New downloads: destination / username / media files. Existing queue entries keep their original archive folders.")
         hint.setObjectName("muted")
         layout.addWidget(hint)
         metrics = QHBoxLayout()
@@ -211,7 +211,7 @@ class MainWindow(QMainWindow):
                      "highlights": hasattr(instaloader.Instaloader, "get_highlights")}
         labels = [("photos", "Photos in posts"), ("videos", "Videos in posts"),
                   ("reels", "Reels tab"), ("stories", "Stories · login required"),
-                  ("highlights", "Highlights · login required"), ("captions", "Captions (.txt)"),
+                  ("highlights", "Highlights · login required"),
                   ("profile_picture", "Profile picture")]
         saved = self.store.settings["options"]
         for i, (name, label) in enumerate(labels):
@@ -223,7 +223,7 @@ class MainWindow(QMainWindow):
             grid.addWidget(check, i // 2, i % 2)
         layout.addWidget(group)
         note = QLabel("Public photos, videos, Reels and carousels are attempted without login. Stories, Highlights and private profiles require your explicit choice of login or skip.\n\n"
-                      "Original available files are saved without conversion. Existing media is skipped by Instaloader. Captions are optional; JSON metadata exports are disabled.\n\n"
+                      "New downloads go directly into one username folder. Original media is saved without conversion; caption text and JSON metadata exports are disabled. Existing files are kept.\n\n"
                       "Incremental runs scan the selected collections again and skip existing files; they do not stop at the first existing post.\n\n"
                       "Photos/videos filter feed media, including mixed carousels. Reels, stories and highlights select their own media. "
                       "Videos visible in the feed can overlap the Reels tab; duplicate posts are skipped in a run.\n\n"
@@ -341,8 +341,8 @@ class MainWindow(QMainWindow):
         self.optimized_workers.setValue(pipeline.workers)
         self.optimized_workers.setAccessibleName("Optimized public media workers")
         optimized_form.addRow("Simultaneous media transfers", self.optimized_workers)
-        optimized_note = QLabel("Public feed photos/videos with captions off use the experimental pipeline. "
-            "Instagram discovery stays sequential. Captions, other content and authenticated downloads use Instaloader. "
+        optimized_note = QLabel("Public feed photos/videos use the experimental pipeline. "
+            "Instagram discovery stays sequential. Other content and authenticated downloads use Instaloader. "
             "Existing rate rules and restrictions apply to both pipelines. Changes apply to the next queue run.")
         optimized_note.setWordWrap(True)
         optimized_form.addRow(optimized_note)

@@ -1,4 +1,4 @@
-param([string]$OutputDirectory = 'dist\optimized-engine')
+param([string]$OutputDirectory = 'dist\flat-folders')
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot

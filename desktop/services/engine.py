@@ -178,14 +178,14 @@ class EngineService:
         report("mode", f"Authenticated — @{self.account}" if self.account else "Public Mode — No Login")
         options = job.options
         # Escape formatter braces in user-chosen paths; username targets are validated.
-        loader.dirname_pattern = str(job.folder).replace("{", "{{").replace("}", "}}") + "/{target}"
+        loader.dirname_pattern = job.dirname_pattern
         loader.download_pictures = options.photos
         loader.download_videos = options.videos
         loader.download_video_thumbnails = False
         loader.save_metadata = False  # JSON exports are disabled, including legacy saved options.
         loader.compress_json = False
-        loader.post_metadata_txt_pattern = "{caption}" if options.captions else ""
-        loader.storyitem_metadata_txt_pattern = "{caption}" if options.captions else ""
+        loader.post_metadata_txt_pattern = ""
+        loader.storyitem_metadata_txt_pattern = ""
         report("activity", f"Looking up @{job.username}")
         key = (job.id, job.username)
         if key not in self.profiles:
@@ -226,6 +226,11 @@ class EngineService:
                 report("activity", f"{target}: {getattr(item, 'shortcode', getattr(item, 'mediaid', 'media'))}")
                 started = time.perf_counter()
                 excluded = sum(self.statistics.measured(name) for name in ("transfer_seconds", "pacing_seconds", "rate_wait_seconds")) if self.statistics else 0
+                original_pattern = getattr(loader, "filename_pattern", "{date_utc}_UTC")
+                if story and job.layout == "flat":
+                    # Stories/highlights may share a timestamp with feed media.
+                    # Keep one folder while distinguishing their stable media ID.
+                    loader.filename_pattern = original_pattern + "_story_{mediaid}"
                 try:
                     if story:
                         loader.download_storyitem(item, target=target)
@@ -233,6 +238,7 @@ class EngineService:
                         loader.download_post(item, target=target)
                         seen.add(item.shortcode)
                 finally:
+                    loader.filename_pattern = original_pattern
                     if self.statistics:
                         after = sum(self.statistics.measured(name) for name in ("transfer_seconds", "pacing_seconds", "rate_wait_seconds"))
                         self.statistics.add("post_processing_seconds", max(0, time.perf_counter() - started - (after - excluded)))

@@ -50,15 +50,16 @@ def profile():
                            get_reels=lambda: [video])
 
 
-def test_engine_creates_destination_preserves_files_and_reports(tmp_path):
+@pytest.mark.parametrize("layout", ["flat", "legacy"])
+def test_engine_creates_destination_preserves_files_and_reports(tmp_path, layout):
     engine = EngineService(loader_factory=FakeLoader, profile_factory=lambda *_: profile())
-    job = Job("example", str(tmp_path / "{archive}"), DownloadOptions(profile_picture=False, reels=True))
+    job = Job("example", str(tmp_path / "{archive}"), DownloadOptions(profile_picture=False, reels=True), layout=layout)
     events = []
     engine.run(job, Control(), lambda *args: events.append(args))
     assert job.folder.is_dir()
     assert engine.loader.post_calls == ["photo", "video"]
     assert ("files", 2) in events
-    path = job.folder / "posts/photo.jpg"
+    path = job.media_folder("posts") / "photo.jpg"
     path.write_bytes(b"previously saved")
     events.clear()
     engine.run(job, Control(), lambda *args: events.append(args))
@@ -72,7 +73,7 @@ def test_reels_are_not_lost_when_feed_videos_disabled(tmp_path):
     job = Job("example", str(tmp_path), DownloadOptions(videos=False, reels=True, profile_picture=False))
     engine.run(job, Control(), lambda *_: None)
     assert engine.loader.post_calls == ["photo", "video"]
-    assert (job.folder / "reels/video.mp4").exists()
+    assert (job.media_folder("reels") / "video.mp4").exists()
 
 
 def test_stories_require_account_before_network(tmp_path):

@@ -80,8 +80,8 @@ def test_public_profiles_download_without_loading_available_sessions(tmp_path):
         assert observations == [("public", None, {})]
         assert ("files", 2) in events
         assert list(service.contexts) == [""]
-        assert (tmp_path / "@public/posts/photo.jpg").exists()
-        assert (tmp_path / "@public/posts/video.mp4").exists()
+        assert (tmp_path / "public/photo.jpg").exists()
+        assert (tmp_path / "public/video.mp4").exists()
         assert not (tmp_path / "@public/reels/video.mp4").exists()  # Feed/Reels deduplication survives section splitting.
     finally:
         service.close()
@@ -99,7 +99,7 @@ def test_declining_restricted_content_preserves_public_files_and_counts(tmp_path
         assert prompts[0]["required"] is True
         assert result["outcome"] == "Completed" and label in result["detail"]
         assert max(value for kind, value in events if kind == "files") == 2
-        assert (tmp_path / "@public/posts/photo.jpg").exists()
+        assert (tmp_path / "public/photo.jpg").exists()
         assert service.sessions.loads == []
     finally:
         service.close()
@@ -305,7 +305,8 @@ def test_separate_real_instaloader_cookie_jars_and_headers_for_each_identity(tmp
         service.close()
 
 
-def test_real_download_disables_metadata_even_when_legacy_option_requests_it(tmp_path):
+@pytest.mark.parametrize("layout", ["flat", "legacy"])
+def test_real_download_disables_text_and_metadata_even_when_legacy_options_request_it(tmp_path, layout):
     post = SimpleNamespace(shortcode="post", typename="GraphImage", is_video=False,
                            date_local=datetime.now(), caption="A saved caption", url="https://test.invalid/image.jpg")
     def loader_factory(**kwargs):
@@ -325,9 +326,11 @@ def test_real_download_disables_metadata_even_when_legacy_option_requests_it(tmp
     engine = EngineService(loader_factory=loader_factory, profile_factory=lambda *_: p, pacing=NO_PACING)
     try:
         options.metadata = True  # Even callers bypassing migration cannot turn engine exports back on.
-        engine.run(Job("public", str(tmp_path), options), Control(), lambda *_: None)
-        assert (tmp_path / "@public/posts/post.jpg").exists()
-        assert (tmp_path / "@public/posts/post.txt").read_text(encoding="utf-8") == "A saved caption\n"
+        options.captions = True
+        job = Job("public", str(tmp_path), options, layout=layout)
+        engine.run(job, Control(), lambda *_: None)
+        assert (job.media_folder("posts") / "post.jpg").exists()
+        assert not list(tmp_path.rglob("*.txt"))
         assert not list(tmp_path.rglob("*.json")) and not list(tmp_path.rglob("*.json.xz"))
         assert engine.loader.save_metadata is False
     finally:

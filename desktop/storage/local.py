@@ -81,6 +81,7 @@ class LocalStore:
         self.settings["performance"] = asdict(performance)
         self.settings["pacing"] = asdict(pacing if performance.profile == "Custom" else preset_pacing(performance.profile))
         self.settings["options"]["metadata"] = False
+        self.settings["options"]["captions"] = False
         self.db = sqlite3.connect(self.root / "history.sqlite3")
         self.db.execute("""CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY, timestamp TEXT, username TEXT, status TEXT,

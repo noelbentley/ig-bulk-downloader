@@ -29,11 +29,12 @@ class DownloadOptions:
     reels: bool = False
     stories: bool = False
     highlights: bool = False
-    captions: bool = True
+    captions: bool = False
     metadata: bool = False
     profile_picture: bool = True
 
     def __post_init__(self):
+        self.captions = False  # Retain old settings/queue schema without creating text sidecars.
         self.metadata = False  # Keep loading older queue/history records without allowing JSON exports.
 
     def validate(self):
@@ -51,11 +52,27 @@ class Job:
     items: int = 0
     files: int = 0
     detail: str = "Waiting to start"
+    layout: str = "flat"
+
+    def __post_init__(self):
+        self.username = parse_profile(self.username)
+        if self.layout not in ("flat", "legacy"):
+            raise ValueError("Unknown download folder layout.")
 
     @property
     def folder(self):
-        # Prefix prevents reserved Windows device names such as CON or AUX.
-        return Path(self.destination) / ("@" + self.username)
+        # Preserve old archive paths; new profiles normally use the plain username.
+        reserved = re.match(r"^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)", self.username, re.I)
+        name = ("@" if self.layout == "legacy" or reserved else "") + self.username
+        return Path(self.destination) / name
+
+    def media_folder(self, section="posts"):
+        return self.folder / section if self.layout == "legacy" else self.folder
+
+    @property
+    def dirname_pattern(self):
+        escaped = str(self.folder).replace("{", "{{").replace("}", "}}")
+        return escaped + ("/{target}" if self.layout == "legacy" else "")
 
     def to_dict(self):
         return asdict(self)
@@ -63,6 +80,7 @@ class Job:
     @classmethod
     def from_dict(cls, data):
         data = dict(data)
+        data.setdefault("layout", "legacy")  # Existing queue/history keeps its original location.
         data["username"] = parse_profile(data["username"])
         data["options"] = DownloadOptions(**data["options"])
         job = cls(**data)

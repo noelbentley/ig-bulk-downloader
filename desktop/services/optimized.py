@@ -363,7 +363,7 @@ class OptimizedEngineService(EngineService):
         if loader.filename_pattern != "{date_utc}_UTC" or loader.slide_start != 0 or loader.slide_end != -1:
             self._add("optimized_fallback_sections")
             return super()._run(job, control, report, seen)
-        loader.dirname_pattern = str(job.folder).replace("{", "{{").replace("}", "}}") + "/{target}"
+        loader.dirname_pattern = job.dirname_pattern
         loader.download_pictures, loader.download_videos = options.photos, options.videos
         loader.download_video_thumbnails = loader.save_metadata = False
         loader.post_metadata_txt_pattern = ""
@@ -480,7 +480,7 @@ class OptimizedEngineService(EngineService):
                         continue
                     remaining[post.shortcode] = 0
                     stem = datetime.fromtimestamp(parsed.timestamp, timezone.utc).strftime("%Y-%m-%d_%H-%M-%S") + "_UTC"
-                    plans = [MediaTask(job.folder / "posts" / (stem + (f"_{media.index}" if media.index else "") + media.suffix),
+                    plans = [MediaTask(job.media_folder("posts") / (stem + (f"_{media.index}" if media.index else "") + media.suffix),
                                        media, parsed.timestamp, post.shortcode) for media in parsed.media]
                     # Resolve rare timestamp/path collisions before counting the next
                     # post, rather than marking it done while its dependency is pending.
