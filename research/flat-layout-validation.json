@@ -1,0 +1,53 @@
+{
+  "validated_at_utc": "2026-11-06T02:51:23+00:00",
+  "built_source_commit": "356e41574c2e1da9196c1f504f3f1621fb2f2f14",
+  "branch": "feature/optimized-download-engine",
+  "tests_passed": 194,
+  "warnings": 68,
+  "warning_origin": "Unchanged native utcfromtimestamp deprecation",
+  "source_smoke": {
+    "ok": true,
+    "profiles": 2,
+    "views": 16,
+    "network": "disabled",
+    "mode": "public",
+    "frozen": false,
+    "engine_check": {
+      "files": 4,
+      "identical_bytes": true,
+      "native_requests": 7,
+      "optimized_requests": 5,
+      "peak_workers": 2,
+      "flat_profile_folder": true,
+      "caption_files": 0
+    }
+  },
+  "packaged_smoke": {
+    "ok": true,
+    "profiles": 2,
+    "views": 16,
+    "network": "disabled",
+    "mode": "public",
+    "frozen": true,
+    "engine_check": {
+      "files": 4,
+      "identical_bytes": true,
+      "native_requests": 7,
+      "optimized_requests": 5,
+      "peak_workers": 2,
+      "flat_profile_folder": true,
+      "caption_files": 0
+    }
+  },
+  "executable": {
+    "path": "dist/flat-folders/IG-Bulk-Downloader.exe",
+    "sha256": "517AEAA7C9AE18BE98AB1556C414C092E515CAC994723B1618ED5F5F7B764722",
+    "bytes": 53828595
+  },
+  "layout": "New jobs: destination/username/media files. Old jobs retain legacy paths.",
+  "new_caption_and_metadata_exports": false,
+  "existing_downloaded_files_moved_or_deleted": false,
+  "release_location": "W: only, as requested",
+  "live_download_tests": false,
+  "prior_optimized_executable_sha256": "EA834DABA118B2B86D79AC6A2F512F659D6A4198CF5274D1BDE406A2237204E6"
+}
