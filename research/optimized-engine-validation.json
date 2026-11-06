@@ -1,0 +1,70 @@
+{
+  "validated_at_utc": "2026-11-06T02:16:55+00:00",
+  "baseline_main_commit": "2a3ee0fecac314d343e3e220d3473a609769e5d6",
+  "built_source_commit": "d43c5750d4d0a74c21d9eee82cd8ee3b25b9c2ad",
+  "branch": "feature/optimized-download-engine",
+  "tests": {
+    "command": ".venv/Scripts/python.exe -m pytest -q",
+    "passed": 182,
+    "warnings": 56,
+    "warning_origin": "Unchanged native utcfromtimestamp deprecation"
+  },
+  "live_network_testing": false,
+  "source_gui_and_engine": {
+    "ok": true,
+    "profiles": 2,
+    "views": 16,
+    "network": "disabled",
+    "mode": "public",
+    "frozen": false,
+    "engine_check": {
+      "files": 4,
+      "identical_bytes": true,
+      "native_requests": 7,
+      "optimized_requests": 5,
+      "peak_workers": 2
+    }
+  },
+  "packaged_gui_and_engine": {
+    "ok": true,
+    "profiles": 2,
+    "views": 16,
+    "network": "disabled",
+    "mode": "public",
+    "frozen": true,
+    "engine_check": {
+      "files": 4,
+      "identical_bytes": true,
+      "native_requests": 7,
+      "optimized_requests": 5,
+      "peak_workers": 2
+    }
+  },
+  "benchmark": {
+    "summary": "research/optimized-engine-benchmarks.json",
+    "sha256": "0E89E74A00D93D23CE62768BF05BA695E9607E735779228521EFFC0A0A1FE92E",
+    "network": "disabled",
+    "repetitions": 3
+  },
+  "executable": {
+    "path": "dist/optimized-engine/IG-Bulk-Downloader.exe",
+    "bytes": 53827869,
+    "sha256": "EA834DABA118B2B86D79AC6A2F512F659D6A4198CF5274D1BDE406A2237204E6",
+    "git_ignored": true
+  },
+  "archive_audit": {
+    "qt_windows_plugin": true,
+    "instaloader_license": true,
+    "optimized_documentation": true,
+    "runtime_data_or_jars": false
+  },
+  "preserved_executables_sha256": {
+    "dist/IG-Bulk-Downloader.exe": "B90D49305F67C8336BDC1858CEA7E9549DE8AA7AA9D96E1F9DAFF85E8085D338",
+    "dist/pacing/IG-Bulk-Downloader.exe": "0102CBF09031E088D1E363DA77A62E836160A216369CC21E6792C7DC1F561315",
+    "dist/public-first/IG-Bulk-Downloader.exe": "F590F9D6E640E4D13F7C94D64329141D6C323FC6DC7EB92219A8924D76218E92",
+    "dist/performance/IG-Bulk-Downloader.exe": "30FAE8262496EDCA755D9B2EE7B8AAD6C4C5408E8F2B3BCF381C9723CC313FD5",
+    "dist/ig-fast-download/IG-Bulk-Downloader.exe": "1C20F94B09E0236CB6C1B3C9F0F070CA878687644A4818302C881D582A2C264C"
+  },
+  "original_instaloader_and_baseline_service_unchanged": true,
+  "limitation": "Offline modeled speedups are not measurements of live Instagram performance."
+}
