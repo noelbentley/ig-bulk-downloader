@@ -47,6 +47,8 @@ class RunStatistics:
         self.values = dict.fromkeys(self.FIELDS, 0.0)
         self.counts = dict.fromkeys(("files", "failed_requests", "retry_attempts", "active_transfers", "peak_transfers"), 0)
         self.counts.update(dict.fromkeys(("http_requests", "http_sessions", "media_sessions", "http_body_bytes",
+            "optimized_rich_posts", "optimized_hydrated_posts", "optimized_fallback_sections", "optimized_fallback_posts",
+            "optimized_discovery_windows", "optimized_saved_files", "optimized_duplicate_files", "optimized_failed_files",
             "http_transport_errors", "http_body_errors", "http_2xx", "http_3xx", "http_4xx", "http_5xx", "media_transfer_samples",
             "inter_file_samples", "duplicate_checks", "file_check_probe_enabled", "listing_nodes",
             "http_media_fresh_requests", "http_media_pooled_requests", "http_media_fresh_bytes", "http_media_pooled_bytes") +
@@ -58,6 +60,7 @@ class RunStatistics:
         self.last_published = float("-inf")
         self.pending_media_start = None
         self.last_media_complete = None
+        self.configured_workers = 1
 
     def media_started(self):
         with self.lock:
@@ -75,6 +78,21 @@ class RunStatistics:
                 self.counts["inter_file_samples"] += 1
             self.last_media_complete = now
             self.pending_media_start = None
+
+    def media_interval(self, started, finished):
+        """Account independent worker intervals in completion order after a wave.
+
+        Per-file durations are summed; transfer_seconds separately measures the
+        union of active transfer time. An overlap contributes no idle gap.
+        """
+        with self.lock:
+            self.values["media_transfer_seconds"] += max(0, finished - started)
+            self.counts["media_transfer_samples"] += 1
+            if self.last_media_complete is not None:
+                self.values["inter_file_gap_seconds"] += max(0, started - self.last_media_complete)
+                self.values["completion_interval_seconds"] += max(0, finished - self.last_media_complete)
+                self.counts["inter_file_samples"] += 1
+            self.last_media_complete = max(finished, self.last_media_complete or finished)
 
     def add(self, name, value=1):
         with self.lock:
@@ -121,7 +139,7 @@ class RunStatistics:
                         average_inter_file_gap_seconds=round(self.values["inter_file_gap_seconds"] / self.counts["inter_file_samples"], 6) if self.counts["inter_file_samples"] else 0.0,
                         average_completion_interval_seconds=round(self.values["completion_interval_seconds"] / self.counts["inter_file_samples"], 6) if self.counts["inter_file_samples"] else 0.0,
                         diagnostic_version=2,
-                        media_workers=1, active_profiles=1 if self.ended is None else 0)
+                        media_workers=self.configured_workers, active_profiles=1 if self.ended is None else 0)
 
     def publish(self, report, force=False):
         now = self.clock()
@@ -147,9 +165,14 @@ def summary_text(data):
             f"Failed requests {data['failed_requests']} ({data['failed_requests_seconds']:.1f}s) · Retries {data['retry_attempts']} ({data.get('retry_seconds', 0):.1f}s)")
     if data.get("diagnostic_version", 0) < 2:
         return base + "\nHTTP detail unavailable in this older report; run the diagnostic build once."
-    return (base + f"\nHTTP {data.get('http_requests', 0)} requests · {data.get('http_requests_per_file', 0):.2f}/file · Native request sleep {data.get('native_delay_seconds', 0):.1f}s\n"
+    detail = (base + f"\nHTTP {data.get('http_requests', 0)} requests · {data.get('http_requests_per_file', 0):.2f}/file · Native request sleep {data.get('native_delay_seconds', 0):.1f}s\n"
             f"Average transfer {data.get('average_transfer_seconds', 0):.3f}s · Inter-file gap {data.get('average_inter_file_gap_seconds', 0):.3f}s\n"
             f"Duplicate checks {data.get('duplicate_check_seconds', 0):.3f}s · History {data.get('history_seconds', 0):.3f}s · GUI callbacks {data.get('gui_seconds', 0):.3f}s")
+    if data.get("optimized_discovery_windows") or data.get("optimized_fallback_sections"):
+        detail += (f"\nOptimized: {data.get('optimized_rich_posts', 0)} rich posts · {data.get('optimized_hydrated_posts', 0)} hydrated · "
+                   f"{data.get('optimized_saved_files', 0)} files · Peak {data.get('peak_transfers', 0)} transfers\n"
+                   f"Instaloader fallback: {data.get('optimized_fallback_sections', 0)} sections · {data.get('optimized_fallback_posts', 0)} posts")
+    return detail
 
 
 def diagnostic_report(data):

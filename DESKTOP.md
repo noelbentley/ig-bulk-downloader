@@ -16,8 +16,10 @@ python -m venv .venv
 
 After installation, the last line is the one-command launch. For a console-free
 source launch use `.\.venv\Scripts\pythonw.exe -m desktop`.
-The current experimental diagnostic executable is `dist\ig-fast-download\IG-Bulk-Downloader.exe`.
-The original performance build remains in `dist\performance` and is untouched.
+The optimized development branch builds `dist\optimized-engine\IG-Bulk-Downloader.exe`.
+See [OPTIMIZED_ENGINE.md](OPTIMIZED_ENGINE.md) for its opt-in Instagram pipeline,
+worker controls, offline measurements and limitations. The earlier executables in
+`dist\performance` and `dist\ig-fast-download` remain untouched.
 Its target machine needs no Python installation.
 
 ## Use
@@ -101,8 +103,9 @@ does not guarantee availability or protection from rate limits.
 ## Performance profiles and diagnostics
 
 The latest investigation and measured live results are in [LIVE_THROUGHPUT.md](LIVE_THROUGHPUT.md).
-This branch adds request-level diagnostics, exportable numeric reports and sequential
-anonymous CDN connection reuse. It does not remove required media-URL discovery or
+The baseline provides request-level diagnostics, exportable numeric reports and
+sequential anonymous CDN connection reuse. The experimental branch additionally
+offers [optimized public Instagram downloads](OPTIMIZED_ENGINE.md). Neither removes required media-URL discovery or
 claim WFDownloader's throughput. `Settings → Performance → Export diagnostic report`
 saves a whitelisted report; the latest GUI run is also saved under the local data
 directory in `diagnostics/latest.json`. Request sleeps, actual HTTP time, media
@@ -114,11 +117,10 @@ Instaloader's rate safeguards. Conservative restores the randomized pacing below
 Custom retains manual settings. Existing saved pacing values migrate to Custom
 while the initial selected profile becomes Balanced.
 
-One profile and one media transfer are active at a time; additional profiles stay
-queued. Additional transfer workers are unavailable because the synchronous engine,
-mutable sessions and rate-controller state do not safely support that change without
-a larger planning/transfer pipeline. Original media, duplicate behavior and naming
-remain unchanged. The Settings panel shows current transfers, files/minute, protection
+One Instagram profile is active at a time; additional profiles stay queued.
+The default Instaloader path uses one transfer. The opt-in public-feed pipeline
+supports 1–5 isolated media workers and keeps API discovery/rate accounting serial.
+Native fallback remains available for other Instagram operations. The Settings panel shows current transfers, files/minute, protection
 status and a persisted last-run numeric performance summary. See [PERFORMANCE.md](PERFORMANCE.md)
 for measured before/after results, the concurrency audit, metric definitions, safe
 restriction cooldown behavior and a reproducible ordinary-download comparison.
@@ -137,7 +139,8 @@ files. In Conservative it is enabled: batches of 3–8 files, pauses of 15–45 
 and a longer 120–300 second rest after an independent 40–60 file interval. Every
 batch size, pause duration, long-rest interval and long-rest duration is drawn
 independently, with inclusive bounds. Long rests are enabled in Conservative. Downloads
-remain sequential (one worker). A long rest replaces a simultaneous batch pause,
+use one worker on the baseline path; the experimental pipeline drains its bounded
+worker wave before pausing, without overshooting a threshold. A long rest replaces a simultaneous batch pause,
 then starts a fresh batch and long-rest interval.
 
 All eight numeric bounds and both toggles are stored in local settings. File
@@ -200,7 +203,8 @@ folders (`@username`), never beside source files. Do not force-add runtime files
   including individual carousel files. Pacing countdowns can be cancelled immediately.
   Network requests use a 30-second timeout; this is not a total task deadline.
   An engine call may involve several requests. Partial files use engine `.temp`
-  writes and are replaced only on successful completion.
+  writes on the native path; the optimized path uses unique `.part` files and
+  publishes complete media without overwriting an existing target.
 - Incremental runs re-scan selected collections and skip existing media, rather
   than assume ordering or stop at the first existing post. Captions may be
   refreshed. Reels/feed overlaps are deduplicated within a run.
@@ -223,27 +227,28 @@ folders (`@username`), never beside source files. Do not force-add runtime files
 .\.venv\Scripts\python.exe -m pytest tests -q
 .\.venv\Scripts\python.exe -m desktop --smoke-test build\qa-source
 powershell -ExecutionPolicy Bypass -File scripts\build.ps1
-.\dist\IG-Bulk-Downloader.exe --smoke-test build\qa-packaged
+.\dist\optimized-engine\IG-Bulk-Downloader.exe --smoke-test build\qa-optimized-packaged
 ```
 
 To build without replacing the existing executable:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -OutputDirectory dist\ig-fast-download
-.\dist\ig-fast-download\IG-Bulk-Downloader.exe --smoke-test build\qa-ig-fast-download-packaged
+powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -OutputDirectory dist\optimized-engine
+.\dist\optimized-engine\IG-Bulk-Downloader.exe --smoke-test build\qa-optimized-packaged
 ```
 
 The build script refuses to overwrite its target if that executable is running.
-This update is delivered in `dist\ig-fast-download\IG-Bulk-Downloader.exe`; the prior
+This update is delivered in `dist\optimized-engine\IG-Bulk-Downloader.exe`; the prior
 `dist\IG-Bulk-Downloader.exe`, `dist\pacing\IG-Bulk-Downloader.exe` and
-`dist\public-first\IG-Bulk-Downloader.exe` and `dist\performance\IG-Bulk-Downloader.exe` are untouched.
+`dist\public-first\IG-Bulk-Downloader.exe`, `dist\performance\IG-Bulk-Downloader.exe`
+and `dist\ig-fast-download\IG-Bulk-Downloader.exe` are untouched.
 After your current downloads finish,
 close the old app normally and launch the new executable. Both use the same local
 settings/sessions/history with a single-instance lock. If desired, copy the new
 executable over the old one only after both are closed. Do not stop active jobs
 just to replace a build. The isolated smoke diagnostic does not use your live data.
 
-The build spec creates `dist\IG-Bulk-Downloader.exe` with no console, Qt's Windows
+The branch's build script creates `dist\optimized-engine\IG-Bulk-Downloader.exe` with no console, Qt's Windows
 platform plugin and Python bundled. Build from Windows with the lock file for the
 tested environment. This is a repeatable dependency-pinned build, not a claim of
 byte-for-byte deterministic output. Dependency license notices are bundled.
@@ -251,7 +256,7 @@ Review THIRD_PARTY_NOTICES.md before redistribution.
 
 `--smoke-test` opens the native event loop with isolated temporary app data, blocks
 network access, exercises queue entry and theme changes, renders all five tabs
-and the authentication prompt and diagnostic summary in both themes (14 views), then exits. Check its output `result.json` and PNG previews. It
+and the authentication prompt, diagnostic summary and optimized settings in both themes (16 views), then exits. Check its output `result.json` and PNG previews. It
 does not contact Instagram or change your normal app settings or sessions.
 
 Tests mock Instagram: parsing, local storage, encrypted session round trips and
@@ -276,6 +281,8 @@ tests are mocked; these checks do not establish current live Instagram availabil
 - `desktop/services/public_first.py`, `errors.py`: content-scoped consent, isolated contexts and error categories
 - `desktop/services/performance.py`, `safety.py`: local numeric diagnostics, performance profiles and persisted restriction gates
 - `desktop/services/request_trace.py`, `media_pool.py`: per-context HTTP diagnostics and isolated sequential media connection pools
+- `desktop/services/optimized.py`, `pipeline.py`: optional Instagram public-feed planning, bounded media waves and persisted controls
+- `desktop/optimized_benchmark.py`: independent native/optimized Instagram fixture comparison (network blocked)
 - `desktop/live_diagnostic.py`, `live_bulk_probe.py`: explicitly invoked, bounded live diagnostic tools; never run automatically
 - `desktop/benchmark.py`: offline native-engine/GUI benchmark (network blocked)
 - `desktop/services/pacing.py`, `control.py`: supplemental scheduler and pausable countdown

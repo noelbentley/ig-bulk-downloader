@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from desktop.models import DownloadOptions, Job
 from desktop.services.pacing import PacingConfig
 from desktop.services.performance import PerformanceConfig, preset_pacing
+from desktop.services.pipeline import PipelineConfig
 from dataclasses import asdict
 
 
@@ -45,7 +46,8 @@ class LocalStore:
         self.settings = {"destination": default_destination(), "theme": "Dark", "accent": "#7c6ff0",
                          "account": "", "options": DownloadOptions().__dict__,
                          "pacing": asdict(preset_pacing("Balanced")), "custom_pacing": asdict(PacingConfig()),
-                         "performance": asdict(PerformanceConfig()), "last_performance": {}, "restriction": {}}
+                         "performance": asdict(PerformanceConfig()), "pipeline": asdict(PipelineConfig()),
+                         "last_performance": {}, "restriction": {}}
         saved = self.read_json("settings.json", {})
         if isinstance(saved, dict):
             for key, value in saved.items():
@@ -70,6 +72,12 @@ class LocalStore:
         if isinstance(saved, dict) and "performance" not in saved:
             custom = pacing  # Preserve old manual values while migrating the default to Balanced.
         self.settings["custom_pacing"] = asdict(custom)
+        try:
+            pipeline = PipelineConfig(**self.settings["pipeline"])
+        except (TypeError, ValueError):
+            pipeline = PipelineConfig()
+            self.warning = "Invalid optimized pipeline settings; the Instaloader baseline was restored."
+        self.settings["pipeline"] = asdict(pipeline)
         self.settings["performance"] = asdict(performance)
         self.settings["pacing"] = asdict(pacing if performance.profile == "Custom" else preset_pacing(performance.profile))
         self.settings["options"]["metadata"] = False

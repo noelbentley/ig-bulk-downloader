@@ -48,6 +48,11 @@ class Pacer:
         return self.rng.randint(self.config.long_interval_min, self.config.long_interval_max)
 
     def completed_file(self, control, report):
+        self.record_completed_file()
+        self.resume_pending(control, report)
+
+    def record_completed_file(self):
+        """Account success now; parallel schedulers drain transfers before waiting."""
         if not self.config.enabled:
             return
         self.batch_count += 1
@@ -59,7 +64,6 @@ class Pacer:
         elif self.batch_count >= self.batch_target:
             self.pending_kind = "Batch pause"
             self.remaining = self.rng.randint(self.config.pause_min, self.config.pause_max)
-        self.resume_pending(control, report)
 
     def resume_pending(self, control, report):
         if self.pending_kind is None:

@@ -6,6 +6,7 @@ from desktop.services.engine import Control, EngineService
 from desktop.services.public_first import PublicFirstService
 from desktop.services.pacing import PacingConfig
 from desktop.services.performance import PerformanceConfig, RunStatistics
+from desktop.services.pipeline import PipelineConfig
 from desktop.services.safety import RestrictionGate
 from desktop.services.errors import safe_activity
 from desktop.services.performance import diagnostic_report
@@ -82,7 +83,13 @@ class QueueManager(QObject):
         performance = PerformanceConfig(**self.store.settings["performance"])
         self.statistics = RunStatistics(performance.profile)
         # Snapshot settings once for this queue run; the engine/pacer spans every profile.
-        self.engine = self.engine_factory(self.sessions, account,
+        factory = self.engine_factory
+        pipeline = PipelineConfig(**self.store.settings["pipeline"])
+        if pipeline.enabled and factory is PublicFirstService:
+            from functools import partial
+            from desktop.services.optimized import OptimizedEngineService
+            factory = partial(PublicFirstService, engine_factory=partial(OptimizedEngineService, config=pipeline))
+        self.engine = factory(self.sessions, account,
                                          pacing=PacingConfig(**self.store.settings["pacing"]))
         self.engine.statistics = self.statistics
         self.engine.safety = self.safety

@@ -8,6 +8,7 @@ data = [(str(root / 'LICENSE'), 'licenses/instaloader'),
         (str(root / 'DESKTOP.md'), '.'),
         (str(root / 'LIVE_THROUGHPUT.md'), '.'),
         (str(root / 'PERFORMANCE.md'), '.')]
+data.append((str(root / 'OPTIMIZED_ENGINE.md'), '.'))
 # Include installed dependency copyright/license texts, not local runtime data.
 for distribution in distributions():
     for entry in distribution.files or ():

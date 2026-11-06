@@ -17,6 +17,7 @@ from desktop.services.queue import QueueManager
 from desktop.services.pacing import PacingConfig
 from desktop.services.performance import PerformanceConfig, preset_pacing, summary_text
 from desktop.services.performance import diagnostic_report
+from desktop.services.pipeline import PipelineConfig
 from desktop.storage.local import atomic_json
 from desktop.storage.sessions import SessionStore
 from desktop.ui.theme import stylesheet
@@ -139,7 +140,7 @@ class MainWindow(QMainWindow):
         self.apply_theme()
         self.refresh()
         self.load_history()
-        self.statusBar().showMessage(store.warning or "Ready • Downloads run sequentially • All settings stay on this PC")
+        self.statusBar().showMessage(store.warning or "Ready • One Instagram profile at a time • All settings stay on this PC")
 
     def _dashboard(self):
         page = QWidget()
@@ -311,7 +312,7 @@ class MainWindow(QMainWindow):
         self.media_workers = QComboBox()
         self.media_workers.addItem("1 (supported)")
         self.media_workers.setEnabled(False)
-        self.media_workers.setToolTip("Additional media workers are not safely supported by this engine integration.")
+        self.media_workers.setToolTip("Instaloader uses one transfer. Experimental public media workers are configured below.")
         form.addRow("Maximum simultaneous transfers", self.media_workers)
         self.protection_status = QLabel("Rate-limit protection: Enabled · Restriction cooldown: Automatic")
         self.protection_status.setWordWrap(True)
@@ -329,6 +330,26 @@ class MainWindow(QMainWindow):
         self.review_button.setVisible(self.manager.safety.review)
         form.addRow(self.review_button)
         layout.addWidget(self.performance_group)
+        self.optimized_group = QGroupBox("Optimized Public Downloads — Experimental")
+        optimized_form = QFormLayout(self.optimized_group)
+        pipeline = PipelineConfig(**self.store.settings["pipeline"])
+        self.optimized_enabled = QCheckBox("Use optimized public-feed pipeline")
+        self.optimized_enabled.setChecked(pipeline.enabled)
+        optimized_form.addRow(self.optimized_enabled)
+        self.optimized_workers = QSpinBox()
+        self.optimized_workers.setRange(1, 5)
+        self.optimized_workers.setValue(pipeline.workers)
+        self.optimized_workers.setAccessibleName("Optimized public media workers")
+        optimized_form.addRow("Simultaneous media transfers", self.optimized_workers)
+        optimized_note = QLabel("Public feed photos/videos with captions off use the experimental pipeline. "
+            "Instagram discovery stays sequential. Captions, other content and authenticated downloads use Instaloader. "
+            "Existing rate rules and restrictions apply to both pipelines. Changes apply to the next queue run.")
+        optimized_note.setWordWrap(True)
+        optimized_form.addRow(optimized_note)
+        layout.addWidget(self.optimized_group)
+        self.optimized_enabled.toggled.connect(self.pipeline_toggled)
+        self.optimized_workers.valueChanged.connect(self.pipeline_toggled)
+        self.pipeline_toggled()
         self.pacing_group = QGroupBox("Randomized Download Pacing")
         group_layout = QVBoxLayout(self.pacing_group)
         config = PacingConfig(**self.store.settings["pacing"])
@@ -371,7 +392,8 @@ class MainWindow(QMainWindow):
                       "Skipped files, failed transfers, captions and metadata do not count.\n\n"
                       "Balanced removes extra pacing waits. Conservative uses randomized breaks. Edit values to use Custom. "
                       "Manual pause freezes pacing countdowns. Changes apply to the next queue run. "
-                      "One profile and one media transfer run at a time; Instagram restrictions always take priority.")
+                      "One Instagram profile runs at a time. Instaloader uses one media worker; the experimental public-feed pipeline uses its configured limit. "
+                      "Instagram restrictions always take priority.")
         note.setWordWrap(True)
         layout.addWidget(note)
         layout.addStretch()
@@ -394,6 +416,12 @@ class MainWindow(QMainWindow):
         self.performance_profile.blockSignals(True)
         self.performance_profile.setCurrentText("Custom")
         self.performance_profile.blockSignals(False)
+
+    def pipeline_toggled(self, *_):
+        enabled = self.optimized_enabled.isChecked()
+        self.optimized_workers.setEnabled(enabled)
+        self.media_workers.setItemText(0, f"{self.optimized_workers.value()} (optimized public feed)" if enabled else "1 (supported)")
+        self.save_preferences()
 
     @timed_gui
     def update_performance(self, data):
@@ -461,6 +489,7 @@ class MainWindow(QMainWindow):
         self.store.settings.update(destination=self.destination.text().strip(), theme=self.theme.currentText(),
                                    options=asdict(self.get_options()), account=self.account.currentData() or "",
                                    pacing=asdict(self.get_pacing()),
+                                   pipeline=asdict(PipelineConfig(self.optimized_enabled.isChecked(), self.optimized_workers.value())),
                                    performance=asdict(PerformanceConfig(self.performance_profile.currentText())))
         if self.performance_profile.currentText() == "Custom":
             self.store.settings["custom_pacing"] = asdict(self.get_pacing())
@@ -551,6 +580,7 @@ class MainWindow(QMainWindow):
         self.pause.setEnabled(busy)
         self.pause.setText("Resume" if self.manager.paused else "Pause")
         self.pacing_group.setEnabled(not busy)
+        self.optimized_group.setEnabled(not busy)
         self.performance_profile.setEnabled(not busy)
         self.review_button.setEnabled(not busy)
         self.update_safety_status()

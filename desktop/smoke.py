@@ -57,7 +57,9 @@ def run_smoke(output):
                     sample = RunStatistics().snapshot()
                     sample.update(files=20, elapsed_seconds=22.24, files_per_minute=53.95, http_requests=26,
                                   http_requests_per_file=1.3, native_delay_seconds=12.87,
-                                  average_transfer_seconds=0.305, average_inter_file_gap_seconds=0.122)
+                                  average_transfer_seconds=0.305, average_inter_file_gap_seconds=0.122,
+                                  optimized_discovery_windows=1, optimized_rich_posts=4,
+                                  optimized_saved_files=20, peak_transfers=3, media_workers=3)
                     window.finish_performance(sample)
                     window.tabs.setCurrentIndex(4)
                     app.processEvents()
@@ -70,13 +72,23 @@ def run_smoke(output):
                         raise OSError("Could not save diagnostic summary preview")
                     window.last_performance.setText("No completed queue run yet.")
                     window.last_performance.setFixedHeight(window.fontMetrics().lineSpacing() + 8)
+                    window.optimized_enabled.setChecked(True)
+                    window.optimized_workers.setValue(5)
+                    app.processEvents()
+                    app.processEvents()
+                    assert window.optimized_workers.isEnabled()
+                    if not window.grab().save(str(output / f"{theme.lower()}-optimized-settings.png")):
+                        raise OSError("Could not save optimized settings preview")
+                    window.optimized_enabled.setChecked(False)
+                    window.optimized_workers.setValue(3)
                 store.save_queue(window.manager.jobs)
                 assert len(store.load_queue()) == 2
                 assert store.settings["pacing"]["batch_min"] == 3
                 assert store.settings["performance"]["profile"] == "Balanced"
                 assert store.settings["pacing"]["enabled"] is False
                 assert store.settings["pacing"]["long_rest_enabled"] is False
-                result = {"ok": True, "profiles": 2, "views": 14, "network": "disabled", "mode": "public",
+                assert not store.settings["pipeline"]["enabled"]
+                result = {"ok": True, "profiles": 2, "views": 16, "network": "disabled", "mode": "public",
                           "frozen": bool(getattr(sys, "frozen", False))}
                 (output / "result.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
             except Exception:

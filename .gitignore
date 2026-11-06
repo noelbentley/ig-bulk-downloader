@@ -53,3 +53,4 @@ cookies*.json
 credentials*.json
 *.pem
 *.key
+*.part
