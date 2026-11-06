@@ -11,3 +11,45 @@ __pycache__/
 # Instagram downloads and sessions
 downloads/
 session-*
+
+# Desktop build and runtime data (keep archives and credentials out of Git)
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+*.exe
+*.dll
+*.pyd
+*.spec.bak
+*.sqlite*
+*.db
+*.db-*
+*.session
+sessions/
+settings.json
+queue.json
+app.lock
+*.temp
+*.tmp
+*.log
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.mp4
+*.mov
+*.json.xz
+**/@*/
+diagnostics/
+
+# Private configuration and authentication exports
+.env
+.env.*
+credentials/
+secrets/
+logs/
+cookies*.txt
+cookies*.json
+credentials*.json
+*.pem
+*.key

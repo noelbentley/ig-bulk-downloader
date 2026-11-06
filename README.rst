@@ -29,6 +29,13 @@
 
 .. badges-end
 
+Windows desktop application
+---------------------------
+
+This checkout also includes **IG Bulk Downloader**, a native PySide6 desktop GUI.
+See `DESKTOP.md <DESKTOP.md>`_ for setup, launch, tests and Windows executable
+build instructions. The original Instaloader engine below remains unchanged.
+
 ::
 
     $ pip3 install instaloader

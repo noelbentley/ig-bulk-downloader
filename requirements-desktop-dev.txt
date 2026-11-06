@@ -1,0 +1,3 @@
+-r requirements-desktop.txt
+PyInstaller==6.22.3
+pytest==9.2.0
