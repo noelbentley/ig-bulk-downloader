@@ -1,0 +1,55 @@
+IG BULK DOWNLOADER - LAPTOP SETUP
+
+NORMAL USE: THE WINDOWS EXECUTABLE
+
+No Python or pip installs are required to use IG-Bulk-Downloader.exe.
+Python and the required libraries are already bundled inside the executable.
+
+1. Copy the IG-downloader folder to your Windows 11 64-bit laptop.
+2. Open IG-Bulk-Downloader.exe.
+3. Choose a download folder on the laptop.
+
+The laptop has its own settings, queue, history and saved logins. Existing saved
+logins from the other PC are not portable; sign in on the laptop if needed.
+
+
+OPTIONAL: RUN THE PYTHON SOURCE INSTEAD OF THE EXECUTABLE
+
+Only use these steps if you want to run the full source project.
+The folder containing just the .exe is not a Python source checkout.
+
+Requirements:
+- Python 3.12, 64-bit, with the Windows Python launcher (py).
+- The complete project source from branch feature/optimized-download-engine,
+  including desktop, instaloader and requirements-desktop.txt.
+
+Example source location: C:\Projects\ig-downloader
+Replace that path below with your actual source folder.
+
+Open PowerShell and run these commands, one line at a time:
+
+cd "C:\Projects\ig-downloader"
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-desktop.txt
+.\.venv\Scripts\python.exe -m desktop
+
+After the first setup, launch the source again with:
+
+cd "C:\Projects\ig-downloader"
+.\.venv\Scripts\python.exe -m desktop
+
+The runtime requirements file installs:
+- PySide6==6.12.0
+- requests==2.34.2
+
+Instaloader is included in the project source. Do not separately pip-install it
+for this project. PyInstaller and pytest are not needed merely to run the app.
+The commands above use the virtual environment directly, so activation is not
+required and no PowerShell execution-policy change is needed.
+
+For the exact original development/build environment, use this install command
+instead of the runtime install command above:
+
+.\.venv\Scripts\python.exe -m pip install -r requirements-desktop-lock.txt
+
+That optional lock file also installs the development and executable-build tools.
