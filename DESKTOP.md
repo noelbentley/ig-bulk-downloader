@@ -16,7 +16,7 @@ python -m venv .venv
 
 After installation, the last line is the one-command launch. For a console-free
 source launch use `.\.venv\Scripts\pythonw.exe -m desktop`.
-The current development branch builds `dist\flat-folders\IG-Bulk-Downloader.exe`.
+The current baseline on `main` builds `dist\flat-folders\IG-Bulk-Downloader.exe`.
 See [OPTIMIZED_ENGINE.md](OPTIMIZED_ENGINE.md) for its opt-in Instagram pipeline,
 worker controls, offline measurements and limitations. The earlier executables in
 `dist\performance` and `dist\ig-fast-download` remain untouched.
@@ -259,7 +259,7 @@ settings/sessions/history with a single-instance lock. If desired, copy the new
 executable over the old one only after both are closed. Do not stop active jobs
 just to replace a build. The isolated smoke diagnostic does not use your live data.
 
-The branch's build script creates `dist\flat-folders\IG-Bulk-Downloader.exe` with no console, Qt's Windows
+The build script creates `dist\flat-folders\IG-Bulk-Downloader.exe` with no console, Qt's Windows
 platform plugin and Python bundled. Build from Windows with the lock file for the
 tested environment. This is a repeatable dependency-pinned build, not a claim of
 byte-for-byte deterministic output. Dependency license notices are bundled.

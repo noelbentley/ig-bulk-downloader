@@ -20,7 +20,7 @@ The folder containing just the .exe is not a Python source checkout.
 
 Requirements:
 - Python 3.12, 64-bit, with the Windows Python launcher (py).
-- The complete project source from branch feature/optimized-download-engine,
+- The complete project source from branch main,
   including desktop, instaloader and requirements-desktop.txt.
 
 Example source location: C:\Projects\ig-downloader

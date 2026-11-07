@@ -1,7 +1,8 @@
 # Experimental Instagram public-download pipeline
 
-Development branch: `feature/optimized-download-engine`.
-Working desktop baseline on `main`: `2a3ee0fecac314d343e3e220d3473a609769e5d6`.
+Current desktop baseline: `main`, including the flat-folder download layout.
+Originally developed on `feature/optimized-download-engine` from desktop baseline
+`2a3ee0fecac314d343e3e220d3473a609769e5d6`.
 The original Instaloader package is unchanged. This is an independently developed
 Instagram implementation; no WFDownloader code or endpoint implementation was copied.
 
@@ -209,8 +210,8 @@ network throughput or compare pre-discovered transfers with full discovery time.
 
 ## Git boundaries
 
-The working desktop implementation was tested, committed and pushed to `main`
-before this branch was created. All optimized implementation, tests, settings and
-build changes remain on `feature/optimized-download-engine`. No merge to `main`
-is authorized or performed. Generated media, credentials, sessions, local runtime
+The optimized implementation, flat-folder layout, tests, settings and build changes
+from `feature/optimized-download-engine` were merged into `main` on 2026-11-07.
+`main` is now the desktop baseline; the optimized public-feed pipeline remains
+opt-in and off by default. Generated media, credentials, sessions, local runtime
 data, benchmark working directories and executables are ignored and not committed.
